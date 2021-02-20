@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}
+    Login
+{% endblock title %}
+{% block header %}
+      <div class="slogan container container--90">
+{#      <div class="slogan--item">#}
+{#          <h1>#}
+{#            Zacznij pomagać!<br />#}
+{#            Oddaj niechciane rzeczy w zaufane ręce#}
+{#          </h1>#}
+{#        </div>#}
+        <section class="login-page">
+{#          <h2>Zaloguj się</h2>#}
+        <div class="slogan--item">
+            <h1><b>Zaloguj się</b></h1>
+        </div>
+          <form>
+            <div class="form-group">
+              <input type="email" name="email" placeholder="Email" />
+            </div>
+            <div class="form-group">
+              <input type="password" name="password" placeholder="Hasło" />
+                <br/>
+              <a href="#" class="btn btn--small btn--without-border reset-password">Przypomnij hasło</a>
+            </div>
+
+            <div class="form-group form-group--buttons">
+              <button class="btn" type="submit">Zaloguj się</button>
+              <a href="/register" class="btn btn--without-border">Załóż konto</a>
+            </div>
+          </form>
+        </section>
+      </div>
+{% endblock header %}
