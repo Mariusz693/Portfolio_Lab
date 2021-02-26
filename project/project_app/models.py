@@ -1,11 +1,47 @@
 from django.db import models
-from django.contrib.auth.models import User
+from django.contrib.auth.models import AbstractUser
+from django.utils.translation import ugettext_lazy as _
+from django.conf import settings
+
+from .managers import CustomUserManager
 
 # Create your models here.
 
 
+class User(AbstractUser):
+
+    username = None
+    email = models.EmailField(verbose_name='email address', max_length=255, unique=True)
+    is_staff = models.BooleanField(
+        _('staff status'),
+        default=False,
+        help_text=_('Designates whether the user can log into this admin site.'),
+    )
+    is_active = models.BooleanField(
+        _('active'),
+        default=True,
+        help_text=_(
+            'Designates whether this user should be treated as active. ''Unselect this instead of deleting accounts.'
+        ),
+    )
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = []
+
+    objects = CustomUserManager()
+
+    class Meta:
+        verbose_name = _('user')
+        verbose_name_plural = _('users')
+
+    def __str__(self):
+        return self.first_name
+
+
 class Category(models.Model):
     name = models.CharField(max_length=128)
+
+    def __str__(self):
+        return self.name
 
 
 class Institution(models.Model):
@@ -19,6 +55,9 @@ class Institution(models.Model):
     type = models.SmallIntegerField(choices=STATUS_CHOICE, default=1)
     categories = models.ManyToManyField(Category)
 
+    def __str__(self):
+        return self.name
+
 
 class Donation(models.Model):
     quantity = models.SmallIntegerField()
@@ -29,6 +68,6 @@ class Donation(models.Model):
     city = models.CharField(max_length=64)
     zip_code = models.CharField(max_length=6)
     pick_up_date = models.DateField()
-    pick_ip_time = models.TimeField()
+    pick_up_time = models.TimeField()
     pick_up_comment = models.TextField(null=True)
-    user = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL)

@@ -3,14 +3,16 @@
 {% block title %}
     Register
 {% endblock title %}
-{% block header %}
-      <div class="slogan container container--90">
+{% block header-img %}
+    <header>
+{% endblock header-img %}
+{% block header-text %}
+    </header>
           <section class="login-page">
-{#          <h2>Załóż konto</h2>#}
-              <div class="slogan--item">
-                  <h1><b>Załóż konto</b></h1>
-        </div>
-          <form>
+              <h2>Załóż konto</h2>
+          <form method="POST">
+              <h3 style="color: red">{{ message }}</h3>
+              {% csrf_token %}
             <div class="form-group">
               <input type="text" name="name" placeholder="Imię" />
             </div>
@@ -32,6 +34,4 @@
             </div>
           </form>
         </section>
-
-      </div>
-{% endblock header %}
+{% endblock header-text %}

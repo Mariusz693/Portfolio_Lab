@@ -64,6 +64,20 @@ document.addEventListener("DOMContentLoaded", function() {
       const page = e.target.dataset.page;
 
       console.log(page);
+      let url = window.location.href;
+      fetch('' + `?page=${page}`, {
+                    method: 'GET',
+                    // body: page,
+                })
+                .then(async (response) => {
+                    return await response.json();
+                })
+                .then(data => {
+                    console.log(data);
+                    // e.target.firstElementChild.dataset.timetable_id = data;
+                })
+                .catch(e => console.error('Błąd' + e));
+
     }
   }
   const helpSection = document.querySelector(".help");
