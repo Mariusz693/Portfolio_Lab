@@ -24,31 +24,43 @@ class LandingPageView(View):
 
         # foundations = institution_all.filter(type=1).order_by('name')
         foundations = Institution.objects.filter(type=1).order_by('name')
-        institutions = Institution.objects.filter(type=2).order_by('name')
+        organizations = Institution.objects.filter(type=2).order_by('name')
         local_collections = Institution.objects.filter(type=3).order_by('name')
-        for foundation in foundations:
-            foundation.categories_str = ', '.join([category.name for category in foundation.categories.all()])
-        for institution in institutions:
-            institution.categories_str = ', '.join([category.name for category in institution.categories.all()])
-        for local_collection in local_collections:
-            local_collection.categories_str = ', '.join([category.name for category in local_collection.categories.all()])
-        paginator_foundations = Paginator(foundations, 2)
-        paginator_foundations_counter = [i for i in range(paginator_foundations.num_pages)]
-        paginator_institutions = Paginator(institutions, 2)
-        paginator_institutions_counter = [i for i in range(paginator_institutions.num_pages)]
-        paginator_local_collections = Paginator(local_collections, 2)
-        paginator_local_collections_counter = [i for i in range(paginator_local_collections.num_pages)]
+        paginator_foundations = Paginator(foundations, 5)
+        paginator_foundations_counter = [i + 1 for i in range(paginator_foundations.num_pages)]
+        paginator_organizations = Paginator(organizations, 5)
+        paginator_organizations_counter = [i + 1 for i in range(paginator_organizations.num_pages)]
+        paginator_local_collections = Paginator(local_collections, 5)
+        paginator_local_collections_counter = [i + 1 for i in range(paginator_local_collections.num_pages)]
         page = request.GET.get('page')
-        if page:
-            foundations = paginator_foundations.get_page(page)
+        institution = request.GET.get('institution')
+        if institution and page:
             data = []
-            for foundation in foundations:
-                print(foundation.categories.all())
-                data.append({
-                    'name': foundation.name,
-                    'description': foundation.description,
-                    'categories': foundation.categories_str
-                })
+            if institution == '1':
+                foundations = paginator_foundations.get_page(page)
+                for foundation in foundations:
+                    data.append({
+                        'name': foundation.name,
+                        'description': foundation.description,
+                        'categories': ', '.join([category.name for category in foundation.categories.all()])
+                    })
+            elif institution == '2':
+                organizations = paginator_organizations.get_page(page)
+                for organization in organizations:
+                    data.append({
+                        'name': organization.name,
+                        'description': organization.description,
+                        'categories': ', '.join([category.name for category in organization.categories.all()])
+                    })
+            else:
+                local_collections = paginator_local_collections.get_page(page)
+                for local_collection in local_collections:
+                    data.append({
+                        'name': local_collection.name,
+                        'description': local_collection.description,
+                        'categories': ', '.join([category.name for category in local_collection.categories.all()])
+                    })
+
             return JsonResponse(data, safe=False)
 
         return render(
@@ -59,8 +71,8 @@ class LandingPageView(View):
                 'institution_counter': institution_counter,
                 'foundations': paginator_foundations.get_page(page),
                 'paginator_foundations_counter': paginator_foundations_counter,
-                'institutions': paginator_institutions.get_page(page),
-                'paginator_institutions_counter': paginator_institutions_counter,
+                'organizations': paginator_organizations.get_page(page),
+                'paginator_organizations_counter': paginator_organizations_counter,
                 'local_collections': paginator_local_collections.get_page(page),
                 'paginator_local_collections_counter': paginator_local_collections_counter,
             }

@@ -96,70 +96,59 @@
                 </div>
 
                 <div class="col">
-                    <div class="text">{{ foundation.categories_str }}</div>
+                    <div class="text">{{ foundation.categories.all|join:", " }}</div>
                 </div>
-              </li>
 
-            {% empty %}
-            <li>
-                <p>Brak Fundacji w bazie danych</p>
-            </li>
+              </li>
           {% endfor %}
         </ul>
+        {% if paginator_foundations_counter|length > 1 %}
         <ul class="help--slides-pagination">
             {% for item in paginator_foundations_counter %}
-            <li><a href="#" class="btn btn--small btn--without-border active" data-page="{{ item }}">{{ item }}</a></li>
+            <li>
+                <a href="#" class="btn btn--small btn--without-border {% if item < 2 %}active{% endif %}" data-institution=1 data-page="{{ item }}">{{ item }}</a>
+            </li>
             {% endfor %}
-{#            {% if foundations.has_previous %}#}
-{#          <li><a href="?page={{ foundations.previous_page_number }}" class="btn btn--small btn--without-border">Poprzednia strona</a></li>#}
-{#            {% endif %}#}
-{#          <li><a href="register" class="btn btn--small btn--without-border active" data-page="1">1</a></li>#}
-{#          <li><a href="#" class="btn btn--small btn--without-border" data-page="2">2</a></li>#}
-{#          <li><a href="/login" class="btn btn--small btn--without-border" data-page="3">3</a></li>#}
-{#            {% if foundations.has_next %}#}
-{#          <li><a href="#help/?page={{ foundations.next_page_number }}" class="btn btn--small btn--without-border">Następna strona {{ foundations.next_page_number }}</a></li>#}
-{#            {% endif %}#}
         </ul>
+      {% endif %}
       </div>
 
 
       <!-- SLIDE 2 -->
       <div class="help--slides" data-id="2">
-        <p>W naszej bazie znajdziesz listę zweryfikowanych Organizacji Pozarządowych, z którymi współpracujemy. Możesz sprawdzić czym się zajmują, komu pomagają i czego potrzebują.</p>
+        <p>W naszej bazie znajdziesz listę zweryfikowanych Organizacji Pozarządowych, z którymi współpracujemy.
+            Możesz sprawdzić czym się zajmują, komu pomagają i czego potrzebują.
+        </p>
 
         <ul class="help--slides-items">
-        {% for institution in institutions %}
+        {% for organization in organizations %}
               <li>
                 <div class="col">
-                  <div class="title">Organizacja "{{ institution }}"</div>
-                  <div class="subtitle">Cel i misja: {{ institution.description }}.</div>
+                  <div class="title">Organizacja "{{ organization }}"</div>
+                  <div class="subtitle">Cel i misja: {{ organization.description }}.</div>
                 </div>
 
-                <div class="col"><div class="text">
-                    {% for category in institution.categories.all %}
-                        {{ category }},
-                        {% endfor %}
-                </div></div>
-              </li>
+                <div class="col">
+                    <div class="text">{{ organization.categories.all|join:", " }}</div>
+                </div>
 
-            {% empty %}
-            <li>
-                <p>Brak Organizacji Pozarządowych w bazie danych</p>
-            </li>
+              </li>
           {% endfor %}
         </ul>
-{#        <!-- Pagination#}
+        {% if paginator_organizations_counter|length > 1 %}
         <ul class="help--slides-pagination">
-            {% for item in paginator_institutions_counter %}
-            <li><a href="#" class="btn btn--small btn--without-border active" data-page="{{ item }}">{{ item }}</a></li>
+            {% for item in paginator_organizations_counter %}
+            <li><a href="#" class="btn btn--small btn--without-border {% if item < 2 %}active{% endif %}" data-institution=2 data-page="{{ item }}">{{ item }}</a></li>
             {% endfor %}
         </ul>
-{#        -->#}
+      {% endif %}
       </div>
 
       <!-- SLIDE 3 -->
       <div class="help--slides" data-id="3">
-        <p>W naszej bazie znajdziesz listę zweryfikowanych Lokalnych Zbiórek, z którymi współpracujemy. Możesz sprawdzić czym się zajmują, komu pomagają i czego potrzebują.</p>
+        <p>W naszej bazie znajdziesz listę zweryfikowanych Lokalnych Zbiórek, z którymi współpracujemy.
+            Możesz sprawdzić czym się zajmują, komu pomagają i czego potrzebują.
+        </p>
 
         <ul class="help--slides-items">
         {% for collection in local_collections %}
@@ -169,24 +158,19 @@
                   <div class="subtitle">Cel i misja: {{ collection.description }}.</div>
                 </div>
 
-                <div class="col"><div class="text">
-                    {% for category in collection.categories.all %}
-                        {{ category }},
-                        {% endfor %}
-                </div></div>
+                <div class="col">
+                    <div class="text">{{ collection.categories.all|join:", " }}</div>
+                </div>
               </li>
-
-            {% empty %}
-            <li>
-                <p>Brak Lokalnych Zbiórek w bazie danych</p>
-            </li>
           {% endfor %}
         </ul>
+        {% if paginator_local_collections_counter|length > 1 %}
         <ul class="help--slides-pagination">
             {% for item in paginator_local_collections_counter %}
-            <li><a href="#" class="btn btn--small btn--without-border active" data-page="{{ item }}">{{ item }}</a></li>
+            <li><a href="#" class="btn btn--small btn--without-border {% if item < 2 %}active{% endif %}" data-institution=3 data-page="{{ item }}">{{ item }}</a></li>
             {% endfor %}
         </ul>
+      {% endif %}
       </div>
     </section>
 {% endblock content %}

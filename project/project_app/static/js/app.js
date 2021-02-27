@@ -61,23 +61,46 @@ document.addEventListener("DOMContentLoaded", function() {
      */
     changePage(e) {
       e.preventDefault();
+      const myPaginator = e.target.parentElement.parentElement;
+      const myList = myPaginator.children;
+      for (let i=0; i<myList.length; i++){
+        myList[i].firstElementChild.classList.remove('active');
+      };
       const page = e.target.dataset.page;
+      const institution= e.target.dataset.institution;
 
-      console.log(page);
-      let url = window.location.href;
-      fetch('' + `?page=${page}`, {
+      fetch('' + `?institution=${institution}&page=${page}`, {
                     method: 'GET',
-                    // body: page,
                 })
                 .then(async (response) => {
                     return await response.json();
                 })
                 .then(data => {
-                    console.log(data);
-                    // e.target.firstElementChild.dataset.timetable_id = data;
+                    e.target.classList.add('active');
+                    const myInstitutionList = e.target.parentElement.parentElement.previousElementSibling;
+                    const myInstitution = myInstitutionList.children[0].cloneNode(true);
+                    for (let i=myInstitutionList.children.length; i>0; i--){
+                      myInstitutionList.removeChild(myInstitutionList.children[i-1]);
+                    };
+                    data.forEach(function (element){
+                      const myNewInstitution = myInstitution.cloneNode(true);
+                      let titleInstitution = '';
+                      if (institution === '1'){
+                        titleInstitution = 'Fundacja'
+                      };
+                      if (institution === '2'){
+                        titleInstitution = 'Organizacja'
+                      };
+                      if (institution === '3'){
+                        titleInstitution = 'Zbiórka'
+                      };
+                      myNewInstitution.firstElementChild.firstElementChild.innerText = `${titleInstitution} "${element.name}"`;
+                      myNewInstitution.firstElementChild.lastElementChild.innerText = `Cel i misja: ${element.description}`;
+                      myNewInstitution.lastElementChild.firstElementChild.innerText = element.categories;
+                      e.target.parentElement.parentElement.previousElementSibling.appendChild(myNewInstitution);
+                    })
                 })
                 .catch(e => console.error('Błąd' + e));
-
     }
   }
   const helpSection = document.querySelector(".help");
