@@ -1,10 +1,17 @@
 from django.shortcuts import render, redirect
 from django.views import View
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.core.paginator import Paginator
 from django.contrib.auth import authenticate, login, logout
-from .models import Donation, Institution, User
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
+import datetime
+import json
+
+from .models import Donation, Institution, User, Category
 from .validators import validate_email
+
 # Create your views here.
 
 
@@ -40,25 +47,25 @@ class LandingPageView(View):
                 foundations = paginator_foundations.get_page(page)
                 for foundation in foundations:
                     data.append({
-                        'name': foundation.name,
-                        'description': foundation.description,
+                        'name': f'Fundacja "{foundation.name}"',
+                        'description': f'Cel i misja: {foundation.description}',
                         'categories': ', '.join([category.name for category in foundation.categories.all()])
                     })
             elif institution == '2':
                 organizations = paginator_organizations.get_page(page)
                 for organization in organizations:
                     data.append({
-                        'name': organization.name,
-                        'description': organization.description,
+                        'name': f'Organizacja "{organization.name}"',
+                        'description': f'Cel i misja: {organization.description}',
                         'categories': ', '.join([category.name for category in organization.categories.all()])
                     })
             else:
                 local_collections = paginator_local_collections.get_page(page)
-                for local_collection in local_collections:
+                for collection in local_collections:
                     data.append({
-                        'name': local_collection.name,
-                        'description': local_collection.description,
-                        'categories': ', '.join([category.name for category in local_collection.categories.all()])
+                        'name': f'Zbiórka "{collection.name}"',
+                        'description': f'Cel i misja: {collection.description}',
+                        'categories': ', '.join([category.name for category in collection.categories.all()])
                     })
 
             return JsonResponse(data, safe=False)
@@ -79,14 +86,57 @@ class LandingPageView(View):
         )
 
 
-class AddDonationView(View):
+@method_decorator(csrf_exempt, name='dispatch')
+class AddDonationView(LoginRequiredMixin, View):
 
     def get(self, request):
 
+        categories = Category.objects.all()
+        institutions = Institution.objects.all()
+        for institution in institutions:
+            list_category = []
+            for category in institution.categories.all():
+                list_category.append(str(category.id))
+            institution.category_list = ','.join(list_category)
+        tomorrow = datetime.date.today() + datetime.timedelta(days=1)
+
         return render(
             request,
-            'form.html'
+            'form.html',
+            context={'categories': categories, 'institutions': institutions, 'tomorrow': tomorrow}
         )
+
+    def post(self, request):
+
+        data = json.loads(request.body.decode())
+        quantity = data['quantity']
+        categories_id = data['categories_id']
+        institution_id = data['institution_id']
+        address = data['address']
+        phone_number = data['phone_number']
+        city = data['city']
+        zip_code = data['zip_code']
+        pick_up_date = data['pick_up_date']
+        pick_up_time = data['pick_up_time']
+        pick_up_comment = data['pick_up_comment']
+        categories_list = []
+        for category in categories_id:
+            categories_list.append(Category.objects.get(id=category))
+        new_donation = Donation.objects.create(
+            quantity=int(quantity),
+            institution=Institution.objects.get(id=institution_id),
+            address=address,
+            phone_number=phone_number,
+            city=city,
+            zip_code=zip_code,
+            pick_up_date=pick_up_date,
+            pick_up_time=pick_up_time,
+            pick_up_comment=pick_up_comment,
+            user=User.objects.get(id=request.user.id)
+        )
+        new_donation.categories.set(categories_list)
+
+        return HttpResponse(True)
 
 
 class LoginView(View):
@@ -106,6 +156,10 @@ class LoginView(View):
 
         if user:
             login(self.request, user)
+
+            if self.request.GET.get('next'):
+
+                return redirect(str(self.request.GET.get('next')))
 
             return redirect('index')
 
@@ -170,3 +224,13 @@ class LogoutView(View):
             logout(request)
 
         return redirect('index')
+
+
+class ThanksDonationView(View):
+
+    def get(self, request):
+
+        return render(
+            request,
+            'form-confirmation.html',
+        )

@@ -1,3 +1,56 @@
+function validatePostCode(postCode){
+  const postCodeList = postCode.split('-');
+  if (postCodeList.length === 2){
+    if (postCodeList[0].length !== 2 || postCodeList[1].length !== 3){
+      return false;
+    } else {
+      for (let i=0; i<postCodeList[0].length; i++){
+        if (isNaN(postCodeList[0][i])){
+          return false;
+        }
+      }
+      for (let i=0; i<postCodeList[1].length; i++){
+        if (isNaN(postCodeList[1][i])){
+          return false;
+        }
+      }
+      return true;
+    }
+  } else {
+    return false;
+  }
+}
+function validatePhone(phone){
+  if (phone.length === 9){
+      for (let i=0; i<phone.length; i++){
+        if (isNaN(phone[i])){
+          return false;
+        }
+      }
+      return true;
+  } else {
+    return false;
+  }
+}
+
+function validateDate(myDate, myDateMin){
+  const myDateList = myDate.split('-');
+  const myDateMinList = myDateMin.split('-');
+  if (myDateList.length < 3){
+    return false;
+  }
+  if (myDateList[0].length > 4){
+    return false;
+  }
+  for (let i=0; i<3; i++){
+    if(myDateList[i] < myDateMinList[i]){
+      return false;
+    }
+  }
+  return true;
+}
+
+
 document.addEventListener("DOMContentLoaded", function() {
   /**
    * HomePage - Help section
@@ -84,18 +137,8 @@ document.addEventListener("DOMContentLoaded", function() {
                     };
                     data.forEach(function (element){
                       const myNewInstitution = myInstitution.cloneNode(true);
-                      let titleInstitution = '';
-                      if (institution === '1'){
-                        titleInstitution = 'Fundacja'
-                      };
-                      if (institution === '2'){
-                        titleInstitution = 'Organizacja'
-                      };
-                      if (institution === '3'){
-                        titleInstitution = 'Zbiórka'
-                      };
-                      myNewInstitution.firstElementChild.firstElementChild.innerText = `${titleInstitution} "${element.name}"`;
-                      myNewInstitution.firstElementChild.lastElementChild.innerText = `Cel i misja: ${element.description}`;
+                      myNewInstitution.firstElementChild.firstElementChild.innerText = element.name;
+                      myNewInstitution.firstElementChild.lastElementChild.innerText = element.description;
                       myNewInstitution.lastElementChild.firstElementChild.innerText = element.categories;
                       e.target.parentElement.parentElement.previousElementSibling.appendChild(myNewInstitution);
                     })
@@ -214,6 +257,8 @@ document.addEventListener("DOMContentLoaded", function() {
       const $stepForms = form.querySelectorAll("form > div");
       this.slides = [...this.$stepInstructions, ...$stepForms];
 
+      this.$formSteps = this.$form.children[1].children[1];
+
       this.init();
     }
 
@@ -258,6 +303,214 @@ document.addEventListener("DOMContentLoaded", function() {
     updateForm() {
       this.$step.innerText = this.currentStep;
 
+      if (this.currentStep == 1){
+
+        const myStep = this.$formSteps.children[0];
+        const myNextButton = myStep.lastElementChild.lastElementChild;
+        let myCategoriesCounter = 0;
+        const myCategories = document.querySelectorAll('input[name=categories]');
+        myCategories.forEach(function (element){
+          if (element.checked){
+            myCategoriesCounter += 1;
+          }
+        });
+        if (myCategoriesCounter < 1){
+          myNextButton.style.display = 'None';
+        }
+        myCategories.forEach(function (element){
+          element.addEventListener('change', function (event){
+            if (element.checked){
+              myCategoriesCounter += 1;
+            } else {
+              myCategoriesCounter -= 1;
+            }
+            if (myCategoriesCounter > 0){
+              myNextButton.style.display = 'block';
+            } else {
+              myNextButton.style.display = 'None';
+            }
+          });
+        })
+      }
+
+      if (this.currentStep == 2){
+
+        const myStep = this.$formSteps.children[1];
+        const myNextButton = myStep.lastElementChild.lastElementChild;
+        const myBags = document.querySelector('input[name=bags]');
+        if (myBags.value === ''){
+          myNextButton.style.display = 'None';
+        }
+        myBags.addEventListener('input', function (event){
+          if (myBags.value !== ''){
+            myNextButton.style.display = 'block';
+          } else {
+            myNextButton.style.display = 'None';
+          }
+        });
+      }
+
+      if (this.currentStep == 3){
+
+        const myStep = this.$formSteps.children[2];
+        const myNextButton = myStep.lastElementChild.lastElementChild;
+        myNextButton.style.display = 'None';
+        const myCategoriesList = [];
+        const myInstitutionsActive = [];
+        const myCategories = document.querySelectorAll('input[name=categories]');
+        myCategories.forEach(function (element){
+          if (element.checked){
+            myCategoriesList.push(element.value);
+          }
+        });
+        const myInstitutions = document.querySelectorAll('input[name=organization]');
+        myInstitutions.forEach(function (institution){
+          institution.parentElement.parentElement.style.display = 'block';
+          const myInstitutionsCategories = institution.dataset.categories;
+          const myInstitutionsCategoriesList = myInstitutionsCategories.split(',');
+          let i = 0;
+          myCategoriesList.forEach(function (category){
+            myInstitutionsCategoriesList.forEach(function (category2){
+              if (category === category2){
+                i += 1;
+              }
+            })
+          })
+          if (i === myCategoriesList.length){
+            myInstitutionsActive.push(institution);
+            institution.parentElement.parentElement.style.display = 'block';
+            if (institution.checked){
+              myNextButton.style.display = 'block';
+            }
+          } else {
+            institution.parentElement.parentElement.style.display = 'None';
+          }
+        });
+        if (myInstitutionsActive.length === 0){
+          myStep.children[1].style.display = 'block';
+        } else {
+          myStep.children[1].style.display = 'None';
+        }
+        myInstitutionsActive.forEach(function (element){
+          element.addEventListener('change', function (event){
+            if (element.checked){
+              myNextButton.style.display = 'block';
+            }
+          });
+        })
+      }
+
+      if (this.currentStep == 4){
+
+        const myList = [];
+        const myStep = this.$formSteps.children[3];
+        const myNextButton = myStep.lastElementChild.lastElementChild;
+        const myInputs = myStep.querySelectorAll('input');
+        for (let i=0; i<myInputs.length; i++){
+          if (myInputs[i].value === ''){
+            myList.push(false);
+            myNextButton.style.display = 'None';
+          } else {
+            myList.push(true);
+          }
+        }
+        for (let i=0; i<myInputs.length; i++){
+          myInputs[i].addEventListener('input', function (e){
+            if (this.name === 'postcode'){
+              if (validatePostCode(this.value)){
+                myList[i] = true;
+                this.parentElement.classList.remove('danger');
+              } else {
+                myList[i] = false;
+                this.parentElement.classList.add('danger');
+              }
+            }
+            else if (this.name === 'phone'){
+              if (validatePhone(this.value)){
+                myList[i] = true;
+                this.parentElement.classList.remove('danger');
+              } else {
+                myList[i] = false;
+                this.parentElement.classList.add('danger');
+              }
+            }
+            else if (this.name === 'data'){
+              if (validateDate(this.value, this.min)){
+                myList[i] = true;
+                this.parentElement.classList.remove('danger');
+              } else {
+                myList[i] = false;
+                this.parentElement.classList.add('danger');
+              }
+            }
+            else {
+              if (this.value !== ''){
+                myList[i] = true;
+              } else {
+                myList[i] = false;
+              }
+            }
+            const myFlag = myList.every(function (element){
+              return element === true;
+            })
+            if (myFlag){
+              myNextButton.style.display = 'block';
+            } else {
+              myNextButton.style.display = 'None';
+            }
+          })
+        }
+      }
+
+      if (this.currentStep == 5){
+
+        const mySummaryElement = document.querySelector('.summary');
+        const myCategoriesList = [];
+        const myCategories = document.querySelectorAll('input[name=categories]');
+        myCategories.forEach(function (element){
+          if (element.checked){
+            myCategoriesList.push(element.parentElement.lastElementChild.innerHTML)
+          }
+        });
+        mySummaryElement.firstElementChild.lastElementChild.firstElementChild.children[3].innerHTML = myCategoriesList.join(', ');
+
+        const myBags = document.querySelector('input[name=bags]').value;
+        mySummaryElement.firstElementChild.lastElementChild.firstElementChild.children[1].innerHTML = `Liczba worków: ${myBags}`;
+
+        let myInstitution = '';
+        const myInstitutions = document.querySelectorAll('input[name=organization]');
+        myInstitutions.forEach(function (element){
+          if (element.checked){
+            myInstitution = element.parentElement.lastElementChild.firstElementChild.innerHTML;
+          }
+        });
+        mySummaryElement.firstElementChild.lastElementChild.lastElementChild.lastElementChild.innerHTML = `Dla - ${myInstitution}`;
+
+        const myAddress = document.querySelector('input[name=address]').value;
+        mySummaryElement.lastElementChild.firstElementChild.lastElementChild.children[0].innerHTML = myAddress;
+
+        const myCity = document.querySelector('input[name=city]').value;
+        mySummaryElement.lastElementChild.firstElementChild.lastElementChild.children[1].innerHTML = myCity;
+
+        const myPostCode = document.querySelector('input[name=postcode]').value;
+        mySummaryElement.lastElementChild.firstElementChild.lastElementChild.children[2].innerHTML = myPostCode;
+
+        const myPhone = document.querySelector('input[name=phone]').value;
+        mySummaryElement.lastElementChild.firstElementChild.lastElementChild.children[3].innerHTML = myPhone;
+
+        const myDate = document.querySelector('input[name=data]').value;
+        mySummaryElement.lastElementChild.lastElementChild.lastElementChild.children[0].innerHTML = myDate;
+
+        const myTime = document.querySelector('input[name=time]').value;
+        mySummaryElement.lastElementChild.lastElementChild.lastElementChild.children[1].innerHTML = myTime;
+
+        const myMoreInfo = document.querySelector('textarea[name=more_info]').value;
+        if (myMoreInfo !== ''){
+          mySummaryElement.lastElementChild.lastElementChild.lastElementChild.children[2].innerHTML = myMoreInfo;
+        } else {
+          mySummaryElement.lastElementChild.lastElementChild.lastElementChild.children[2].innerHTML = 'Brak uwag';
+        }
+      }
       // TODO: Validation
 
       this.slides.forEach(slide => {
@@ -274,6 +527,7 @@ document.addEventListener("DOMContentLoaded", function() {
       // TODO: get data from inputs and show them in summary
     }
 
+
     /**
      * Submit form
      *
@@ -283,6 +537,57 @@ document.addEventListener("DOMContentLoaded", function() {
       e.preventDefault();
       this.currentStep++;
       this.updateForm();
+      console.log('jestem');
+      const myCategoriesList = [];
+      const myCategories = document.querySelectorAll('input[name=categories]');
+      myCategories.forEach(function (element){
+        if (element.checked){
+          myCategoriesList.push(element.value);
+        }
+      });
+      const myBags = document.querySelector('input[name=bags]').value;
+      let myInstitution = '';
+      const myInstitutions = document.querySelectorAll('input[name=organization]');
+      myInstitutions.forEach(function (element){
+        if (element.checked){
+          myInstitution = element.value;
+        }
+      });
+      const myAddress = document.querySelector('input[name=address]').value;
+      const myCity = document.querySelector('input[name=city]').value;
+      const myPostCode = document.querySelector('input[name=postcode]').value;
+      const myPhone = document.querySelector('input[name=phone]').value;
+      const myDate = document.querySelector('input[name=data]').value;
+      const myTime = document.querySelector('input[name=time]').value;
+      const myMoreInfo = document.querySelector('textarea[name=more_info]').value;
+      const obj = {
+        quantity: myBags,
+        categories_id: myCategoriesList,
+        institution_id: myInstitution,
+        address: myAddress,
+        phone_number: myPhone,
+        city: myCity,
+        zip_code: myPostCode,
+        pick_up_date: myDate,
+        pick_up_time: myTime,
+        pick_up_comment: myMoreInfo
+      };
+      console.log(obj);
+      fetch(window.location.href, {
+        method: 'POST',
+        body: JSON.stringify(obj),
+
+      })
+          .then(async (response) => {
+            return await response.text();
+          })
+          .then(data => {
+            console.log(data);
+            if (data === 'True'){
+              window.location = '/thanks_donation';
+            }
+          })
+          .catch(e => console.error('Błąd' + e));
     }
   }
   const form = document.querySelector(".form--steps");
