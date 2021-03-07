@@ -12,18 +12,7 @@ class User(AbstractUser):
 
     username = None
     email = models.EmailField(verbose_name='email address', max_length=255, unique=True)
-    is_staff = models.BooleanField(
-        _('staff status'),
-        default=False,
-        help_text=_('Designates whether the user can log into this admin site.'),
-    )
-    is_active = models.BooleanField(
-        _('active'),
-        default=True,
-        help_text=_(
-            'Designates whether this user should be treated as active. ''Unselect this instead of deleting accounts.'
-        ),
-    )
+
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
 
@@ -38,10 +27,14 @@ class User(AbstractUser):
 
 
 class Category(models.Model):
-    name = models.CharField(max_length=128)
+    name = models.CharField(max_length=128, verbose_name='Nazwa')
 
     def __str__(self):
         return self.name
+
+    class Meta:
+        verbose_name = 'Kategoria'
+        verbose_name_plural = 'Kategorie'
 
 
 class Institution(models.Model):
@@ -50,24 +43,35 @@ class Institution(models.Model):
         (2, 'Organizacja pozarządowa'),
         (3, 'Zbiórka lokalna')
     )
-    name = models.CharField(max_length=256)
-    description = models.TextField(null=True)
-    type = models.SmallIntegerField(choices=STATUS_CHOICE, default=1)
-    categories = models.ManyToManyField(Category)
+    name = models.CharField(max_length=256, verbose_name='Nazwa')
+    description = models.TextField(null=True, verbose_name='Opis')
+    type = models.SmallIntegerField(choices=STATUS_CHOICE, default=1, verbose_name='Rodzaj')
+    categories = models.ManyToManyField(Category, verbose_name='Kategorie darowizny')
 
     def __str__(self):
         return self.name
 
+    class Meta:
+        verbose_name = 'Instytucja'
+        verbose_name_plural = 'Instytucje'
+
 
 class Donation(models.Model):
-    quantity = models.SmallIntegerField()
-    categories = models.ManyToManyField(Category)
-    institution = models.ForeignKey(Institution, on_delete=models.CASCADE)
-    address = models.CharField(max_length=128)
-    phone_number = models.CharField(max_length=9)
-    city = models.CharField(max_length=64)
-    zip_code = models.CharField(max_length=6)
-    pick_up_date = models.DateField()
-    pick_up_time = models.TimeField()
-    pick_up_comment = models.TextField(null=True)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL)
+    quantity = models.SmallIntegerField(verbose_name='Ilość worków')
+    categories = models.ManyToManyField(Category, verbose_name='Kategorie darowizny')
+    institution = models.ForeignKey(Institution, on_delete=models.CASCADE, verbose_name='Instytucja')
+    address = models.CharField(max_length=128, verbose_name='Adres')
+    phone_number = models.CharField(max_length=9, verbose_name='Numer telefonu')
+    city = models.CharField(max_length=64, verbose_name='Miasto')
+    zip_code = models.CharField(max_length=6, verbose_name='Kod pocztowy')
+    pick_up_date = models.DateField(verbose_name='Data odbioru')
+    pick_up_time = models.TimeField(verbose_name='Godzina odbioru')
+    pick_up_comment = models.TextField(blank=True, verbose_name='Uwagi')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL, verbose_name='Użytkownik')
+
+    def __str__(self):
+        return f'{self.user} {self.pick_up_date}'
+
+    class Meta:
+        verbose_name = 'Darowizna'
+        verbose_name_plural = 'Darowizny'

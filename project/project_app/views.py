@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from django.views import View
+from django.views.generic.edit import View, FormView
 from django.http import JsonResponse, HttpResponse
 from django.core.paginator import Paginator
 from django.contrib.auth import authenticate, login, logout
@@ -10,7 +10,7 @@ import datetime
 import json
 
 from .models import Donation, Institution, User, Category
-from .validators import validate_email
+from .forms import UserRegisterForm, UserLoginForm, DonationForm
 
 # Create your views here.
 
@@ -29,7 +29,6 @@ class LandingPageView(View):
             if institution.donation_set.first() is not None:
                 institution_counter += 1
 
-        # foundations = institution_all.filter(type=1).order_by('name')
         foundations = Institution.objects.filter(type=1).order_by('name')
         organizations = Institution.objects.filter(type=2).order_by('name')
         local_collections = Institution.objects.filter(type=3).order_by('name')
@@ -109,111 +108,55 @@ class AddDonationView(LoginRequiredMixin, View):
     def post(self, request):
 
         data = json.loads(request.body.decode())
-        quantity = data['quantity']
-        categories_id = data['categories_id']
-        institution_id = data['institution_id']
-        address = data['address']
-        phone_number = data['phone_number']
-        city = data['city']
-        zip_code = data['zip_code']
-        pick_up_date = data['pick_up_date']
-        pick_up_time = data['pick_up_time']
-        pick_up_comment = data['pick_up_comment']
-        categories_list = []
-        for category in categories_id:
-            categories_list.append(Category.objects.get(id=category))
-        new_donation = Donation.objects.create(
-            quantity=int(quantity),
-            institution=Institution.objects.get(id=institution_id),
-            address=address,
-            phone_number=phone_number,
-            city=city,
-            zip_code=zip_code,
-            pick_up_date=pick_up_date,
-            pick_up_time=pick_up_time,
-            pick_up_comment=pick_up_comment,
-            user=User.objects.get(id=request.user.id)
-        )
-        new_donation.categories.set(categories_list)
+        data['user'] = request.user.id
+        form = DonationForm(data)
 
-        return HttpResponse(True)
+        if form.is_valid():
+
+            form.save()
+
+            return HttpResponse(True)
+
+        return HttpResponse(False)
 
 
-class LoginView(View):
+class LoginView(FormView):
 
-    def get(self, request):
+    form_class = UserLoginForm
+    template_name = 'login.html'
 
-        return render(
-            request,
-            'login.html'
-        )
+    def get_success_url(self):
 
-    def post(self, request):
+        if self.request.GET.get('next'):
 
-        email = request.POST.get('email')
-        password = request.POST.get('password')
-        user = authenticate(email=email, password=password)
+            return str(self.request.GET.get('next'))
+
+        return '/'
+
+    def form_valid(self, form):
+
+        user = form.authenticate_user()
 
         if user:
             login(self.request, user)
-
-            if self.request.GET.get('next'):
-
-                return redirect(str(self.request.GET.get('next')))
-
-            return redirect('index')
-
         else:
-            if User.objects.filter(email=email):
-
-                return render(
-                    request,
-                    'login.html',
-                    context={'message': 'Złe hasło'}
-                )
 
             return redirect('register')
 
+        return super(LoginView, self).form_valid(form)
 
-class RegisterView(View):
 
-    def get(self, request):
+class RegisterView(FormView):
 
-        return render(
-            request,
-            'register.html'
-        )
+    form_class = UserRegisterForm
+    template_name = 'register.html'
+    success_url = '/login/'
 
-    def post(self, request):
+    def form_valid(self, form):
 
-        name = request.POST.get('name')
-        surname = request.POST.get('surname')
-        email = request.POST.get('email')
-        password = request.POST.get('password')
-        password2 = request.POST.get('password2')
+        form.save()
 
-        if name == '':
-            message = 'Brak imienia'
-        elif surname == '':
-            message = 'Brak nazwiska'
-        elif validate_email(email) != 1:
-            message = validate_email(email)
-        elif password != password2:
-            message = 'Hasła róźnią się od siebie'
-        else:
-            new_user = User.objects.create_user(
-                email=email,
-                first_name=name,
-                last_name=surname,
-                password=password
-            )
-            return redirect('login')
-
-        return render(
-            request,
-            'register.html',
-            context={'message': message}
-        )
+        return super(RegisterView, self).form_valid(form)
 
 
 class LogoutView(View):

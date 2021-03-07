@@ -287,7 +287,9 @@ document.addEventListener("DOMContentLoaded", function() {
       this.$prev.forEach(btn => {
         btn.addEventListener("click", e => {
           e.preventDefault();
-          this.currentStep--;
+          if (this.currentStep > 1){
+            this.currentStep--;
+          };
           this.updateForm();
         });
       });
@@ -306,6 +308,10 @@ document.addEventListener("DOMContentLoaded", function() {
       if (this.currentStep == 1){
 
         const myStep = this.$formSteps.children[0];
+        const myPrevButton = myStep.lastElementChild.firstElementChild;
+        myPrevButton.addEventListener('click', function (){
+          window.location = '/';
+        })
         const myNextButton = myStep.lastElementChild.lastElementChild;
         let myCategoriesCounter = 0;
         const myCategories = document.querySelectorAll('input[name=categories]');
@@ -537,7 +543,6 @@ document.addEventListener("DOMContentLoaded", function() {
       e.preventDefault();
       this.currentStep++;
       this.updateForm();
-      console.log('jestem');
       const myCategoriesList = [];
       const myCategories = document.querySelectorAll('input[name=categories]');
       myCategories.forEach(function (element){
@@ -560,10 +565,11 @@ document.addEventListener("DOMContentLoaded", function() {
       const myDate = document.querySelector('input[name=data]').value;
       const myTime = document.querySelector('input[name=time]').value;
       const myMoreInfo = document.querySelector('textarea[name=more_info]').value;
+
       const obj = {
         quantity: myBags,
-        categories_id: myCategoriesList,
-        institution_id: myInstitution,
+        categories: myCategoriesList,
+        institution: myInstitution,
         address: myAddress,
         phone_number: myPhone,
         city: myCity,
@@ -572,17 +578,15 @@ document.addEventListener("DOMContentLoaded", function() {
         pick_up_time: myTime,
         pick_up_comment: myMoreInfo
       };
-      console.log(obj);
+
       fetch(window.location.href, {
         method: 'POST',
         body: JSON.stringify(obj),
-
       })
           .then(async (response) => {
             return await response.text();
           })
           .then(data => {
-            console.log(data);
             if (data === 'True'){
               window.location = '/thanks_donation';
             }
