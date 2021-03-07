@@ -177,3 +177,17 @@ class ThanksDonationView(View):
             request,
             'form-confirmation.html',
         )
+
+
+class UserProfileView(View):
+
+    def get(self, request):
+
+        user = request.user
+        donations = Donation.objects.filter(user=user).order_by('is_taken')
+
+        return render(
+            request,
+            'profile.html',
+            context={'user': user, 'donations': donations}
+        )

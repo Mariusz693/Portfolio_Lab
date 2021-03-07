@@ -68,6 +68,7 @@ class Donation(models.Model):
     pick_up_time = models.TimeField(verbose_name='Godzina odbioru')
     pick_up_comment = models.TextField(blank=True, verbose_name='Uwagi')
     user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL, verbose_name='Użytkownik')
+    is_taken = models.BooleanField(blank=True, default=False)
 
     def __str__(self):
         return f'{self.user} {self.pick_up_date}'

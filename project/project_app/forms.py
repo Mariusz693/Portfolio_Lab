@@ -8,8 +8,8 @@ from .validators import validate_email
 
 class UserRegisterForm(forms.Form):
 
-    name = forms.CharField(widget=forms.TextInput(attrs={'placeholder': 'Imię'}))
-    surname = forms.CharField(widget=forms.TextInput(attrs={'placeholder': 'Nazwisko'}))
+    first_name = forms.CharField(widget=forms.TextInput(attrs={'placeholder': 'Imię'}))
+    last_name = forms.CharField(widget=forms.TextInput(attrs={'placeholder': 'Nazwisko'}))
     email = forms.CharField(widget=forms.TextInput(attrs={'placeholder': 'Email'}), validators=[validate_email])
     password = forms.CharField(widget=forms.PasswordInput(attrs={'placeholder': 'Hasło'}))
     password2 = forms.CharField(widget=forms.PasswordInput(attrs={'placeholder': 'Powtórz hasło'}))
@@ -23,11 +23,10 @@ class UserRegisterForm(forms.Form):
             raise ValidationError('Hasła róźnią się od siebie')
 
     def save(self, commit=True):
-
         return User.objects.create_user(
             email=self.cleaned_data['email'],
-            first_name=self.cleaned_data['name'],
-            last_name=self.cleaned_data['surname'],
+            first_name=self.cleaned_data['first_name'],
+            last_name=self.cleaned_data['last_name'],
             password=self.cleaned_data['password']
         )
 
