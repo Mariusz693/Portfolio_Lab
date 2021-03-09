@@ -3,24 +3,27 @@ from django.core.exceptions import ValidationError
 from django.contrib.auth import authenticate
 
 from .models import User, Donation
-from .validators import validate_email
 
 
-class UserRegisterForm(forms.Form):
+class UserRegisterForm(forms.ModelForm):
 
     first_name = forms.CharField(widget=forms.TextInput(attrs={'placeholder': 'Imię'}))
     last_name = forms.CharField(widget=forms.TextInput(attrs={'placeholder': 'Nazwisko'}))
-    email = forms.CharField(widget=forms.TextInput(attrs={'placeholder': 'Email'}), validators=[validate_email])
+    email = forms.CharField(widget=forms.TextInput(attrs={'placeholder': 'Email'}))
     password = forms.CharField(widget=forms.PasswordInput(attrs={'placeholder': 'Hasło'}))
-    password2 = forms.CharField(widget=forms.PasswordInput(attrs={'placeholder': 'Powtórz hasło'}))
+    password_repeat = forms.CharField(widget=forms.PasswordInput(attrs={'placeholder': 'Powtórz hasło'}))
+
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'email', 'password', 'password_repeat']
 
     def clean(self):
-        super(UserRegisterForm, self).clean()
+        super().clean()
         password = self.cleaned_data['password']
-        password2 = self.cleaned_data['password2']
+        password_repeat = self.cleaned_data['password_repeat']
 
-        if password != password2:
-            raise ValidationError('Hasła róźnią się od siebie')
+        if password != password_repeat:
+            self.add_error('password', 'Hasła róźnią się od siebie')
 
     def save(self, commit=True):
         return User.objects.create_user(
@@ -43,7 +46,7 @@ class UserLoginForm(forms.Form):
 
         if User.objects.filter(email=email):
             if not authenticate(email=email, password=password):
-                raise ValidationError('Źle podane hasło')
+                self.add_error('password', 'Błędne hasło')
 
     def authenticate_user(self):
 
@@ -52,6 +55,43 @@ class UserLoginForm(forms.Form):
         user = authenticate(email=email, password=password)
 
         return user
+
+
+class UserUpdateForm(forms.Form):
+
+    password_check = forms.CharField(widget=forms.PasswordInput(attrs={'placeholder': 'Potwierdź hasłem'}))
+    first_name = forms.CharField(widget=forms.TextInput(attrs={'placeholder': 'Imię'}))
+    last_name = forms.CharField(widget=forms.TextInput(attrs={'placeholder': 'Nazwisko'}))
+    email = forms.CharField(widget=forms.HiddenInput())
+
+    def clean(self):
+        super().clean()
+        password_check = self.cleaned_data['password_check']
+        email = self.cleaned_data['email']
+
+        if not authenticate(email=email, password=password_check):
+            self.add_error('password_check', 'Błędne hasło')
+
+
+class UserPasswordForm(forms.Form):
+
+    password_new = forms.CharField(widget=forms.PasswordInput(attrs={'placeholder': 'Nowe hasło'}))
+    password_repeat = forms.CharField(widget=forms.PasswordInput(attrs={'placeholder': 'Powtórz hasło'}))
+    password_check = forms.CharField(widget=forms.PasswordInput(attrs={'placeholder': 'Poprzednie hasło'}))
+    email = forms.CharField(widget=forms.HiddenInput())
+
+    def clean(self):
+        super().clean()
+        password_new = self.cleaned_data['password_new']
+        password_repeat = self.cleaned_data['password_repeat']
+        password_check = self.cleaned_data['password_check']
+        email = self.cleaned_data['email']
+
+        if password_new != password_repeat:
+            self.add_error('password_new', 'Nowe hasła róźnią się od siebie')
+
+        if not authenticate(email=email, password=password_check):
+            self.add_error('password_check', 'Błędne hasło')
 
 
 class DonationForm(forms.ModelForm):

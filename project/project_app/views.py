@@ -10,7 +10,7 @@ import datetime
 import json
 
 from .models import Donation, Institution, User, Category
-from .forms import UserRegisterForm, UserLoginForm, DonationForm
+from .forms import UserRegisterForm, UserLoginForm, DonationForm, UserUpdateForm, UserPasswordForm
 
 # Create your views here.
 
@@ -120,7 +120,7 @@ class AddDonationView(LoginRequiredMixin, View):
         return HttpResponse(False)
 
 
-class LoginView(FormView):
+class UserLoginView(FormView):
 
     form_class = UserLoginForm
     template_name = 'login.html'
@@ -143,10 +143,10 @@ class LoginView(FormView):
 
             return redirect('register')
 
-        return super(LoginView, self).form_valid(form)
+        return super().form_valid(form)
 
 
-class RegisterView(FormView):
+class UserRegisterView(FormView):
 
     form_class = UserRegisterForm
     template_name = 'register.html'
@@ -156,10 +156,79 @@ class RegisterView(FormView):
 
         form.save()
 
-        return super(RegisterView, self).form_valid(form)
+        return super().form_valid(form)
 
 
-class LogoutView(View):
+class UserUpdateView(View):
+
+    def get(self, request):
+
+        form = UserUpdateForm(initial={
+            'first_name': request.user.first_name,
+            'last_name': request.user.last_name,
+            'email': request.user.email
+        })
+
+        return render(
+            request,
+            'update.html',
+            context={'form': form}
+        )
+
+    def post(self, request):
+
+        form = UserUpdateForm(request.POST)
+
+        if form.is_valid():
+
+            user = request.user
+            user.first_name = form.cleaned_data['first_name']
+            user.last_name = form.cleaned_data['last_name']
+            user.save()
+
+            return redirect('index')
+
+        return render(
+            request,
+            'update.html',
+            context={'form': form}
+        )
+
+
+class UserPasswordView(View):
+
+    def get(self, request):
+
+        form = UserPasswordForm(initial={
+            'email': request.user.email
+        })
+
+        return render(
+            request,
+            'password.html',
+            context={'form': form}
+        )
+
+    def post(self, request):
+
+        form = UserPasswordForm(request.POST)
+
+        if form.is_valid():
+
+            user = request.user
+            user.set_password(form.cleaned_data['password_new'])
+            user.save()
+
+            return redirect('login')
+
+        return render(
+            request,
+            'password.html',
+            context={'form': form}
+        )
+
+
+class UserLogoutView(View):
 
     def get(self, request):
 
