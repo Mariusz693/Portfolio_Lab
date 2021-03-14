@@ -7,59 +7,83 @@
     <header class="header--main-page">
 {% endblock header-img %}
 {% block header-text %}
-      <div class="slogan container container--90">
-        <div class="slogan--item">
-          <h2>Profil użytkownika</h2>
-        <ul class="help--slides-items">
-            <li></li>
-            <li></li>
-            <li>
-                 <div class="col"><div class="title">Imię: {{ user }}</div></div>
-            </li>
-            <li>
-                 <div class="col"><div class="title">Nazwisko: {{ user.last_name }}</div></div>
-            </li>
-             <li>
-                 <div class="col"><div class="title">Email: {{ user.email }}</div></div>
-            </li>
-        </ul>
+        <div class="slogan container container--90">
+            <div class="slogan--item">
+                <h2>Profil użytkownika</h2>
+                <ul class="help--slides-items">
+                    <li></li>
+                    <li></li>
+                    <li>
+                         <div class="col">
+                             <div class="title">Imię: {{ user }}</div>
+                         </div>
+                    </li>
+                    <li>
+                         <div class="col">
+                             <div class="title">Nazwisko: {{ user.last_name }}</div>
+                         </div>
+                    </li>
+                    <li>
+                         <div class="col">
+                             <div class="title">Email: {{ user.email }}</div>
+                         </div>
+                    </li>
+                </ul>
+            </div>
         </div>
-      </div>
     </header>
 {% endblock header-text %}
 {% block content %}
-
-     <section class="steps">
-      <div class="container container--85">
-      <h2>Komu pomagłeś</h2>
-        <table class="table">
-            <thead>
-            <tr>
-                <th class="col-1">Ilość worków</th>
-                <th class="col-2">Instytucja</th>
-                <th class="col-3">Kategorie</th>
-                <th class="col-4">Data odbioru</th>
-                <th class="col-5">Odebrano</th>
-            </tr>
-            </thead>
-            <tbody>
-          {% for donation in donations %}
-              <tr>
-              <td class="col-1">{{ donation.quantity }}</td>
-              <td class="col-2">{{ donation.institution }}</td>
-              <td class="col-3">{{ donation.categories.all|join:", " }}</td>
-              <td class="col-4">{{ donation.pick_up_date }}</td>
-              <td class="col-5">
-                  {% if donation.is_taken %}
-                  &check;
-                  {% else %}
-                      <input type="checkbox"/>
-                  {% endif %}
-              </td>
-              </tr>
-          {% endfor %}
-            </tbody>
-        </table>
-      </div>
+    {% if donations %}
+    <section class="steps">
+        <div class="container container--85">
+            <h2>Komu pomagłeś</h2>
+            <form method="POST">
+                {% csrf_token %}
+                {{ formset.management_form }}
+                <table>
+                    <thead class="table">
+                        <tr>
+                            <th class="col-1">Ilość worków</th>
+                            <th class="col-2">Instytucja</th>
+                            <th class="col-3">Kategorie</th>
+                            <th class="col-4">Data odbioru</th>
+                            <th class="col-5">Odebrano</th>
+                        </tr>
+                    </thead>
+                    <tbody class="table">
+                        {% for donation in donations %}
+                        <tr>
+                            <td class="col-1">{{ donation.quantity }}</td>
+                            <td class="col-2">{{ donation.institution }}</td>
+                            <td class="col-3">{{ donation.categories.all|join:", " }}</td>
+                            <td class="col-4">{{ donation.pick_up_date }}</td>
+                            <td class="col-5">
+                                {% if donation.is_taken %}
+                                &check;
+                                {% else %}
+                                <input type="checkbox" name="form-{{ forloop.counter0 }}-is_taken">
+                                <input type="hidden" name="form-{{ forloop.counter0 }}-id" value="{{ donation.id }}">
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    {% if formset.total_form_count %}
+                    <tfoot>
+                        <tr>
+                            <td class="col-6" colspan="4"></td>
+                            <td class="col-5">
+                                <div>
+                                    <button class="btn" type="submit">Zapisz</button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tfoot>
+                    {% endif %}
+                </table>
+            </form>
+        </div>
     </section>
+    {% endif %}
 {% endblock content %}

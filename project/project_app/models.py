@@ -8,6 +8,13 @@ from .managers import CustomUserManager
 # Create your models here.
 
 
+STATUS_CHOICE = (
+        (0, 'Fundacja'),
+        (1, 'Organizacja pozarządowa'),
+        (2, 'Zbiórka lokalna')
+    )
+
+
 class User(AbstractUser):
 
     username = None
@@ -38,14 +45,10 @@ class Category(models.Model):
 
 
 class Institution(models.Model):
-    STATUS_CHOICE = (
-        (1, 'Fundacja'),
-        (2, 'Organizacja pozarządowa'),
-        (3, 'Zbiórka lokalna')
-    )
+
     name = models.CharField(max_length=256, verbose_name='Nazwa')
     description = models.TextField(null=True, verbose_name='Opis')
-    type = models.SmallIntegerField(choices=STATUS_CHOICE, default=1, verbose_name='Rodzaj')
+    type = models.SmallIntegerField(choices=STATUS_CHOICE, default=0, verbose_name='Rodzaj')
     categories = models.ManyToManyField(Category, verbose_name='Kategorie darowizny')
 
     def __str__(self):
@@ -68,7 +71,7 @@ class Donation(models.Model):
     pick_up_time = models.TimeField(verbose_name='Godzina odbioru')
     pick_up_comment = models.TextField(blank=True, verbose_name='Uwagi')
     user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL, verbose_name='Użytkownik')
-    is_taken = models.BooleanField(blank=True, default=False)
+    is_taken = models.BooleanField(blank=True, default=False, verbose_name='Odebrano')
 
     def __str__(self):
         return f'{self.user} {self.pick_up_date}'

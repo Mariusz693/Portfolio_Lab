@@ -8,15 +8,15 @@
 {% endblock header-img %}
 {% block header-text %}
     </header>
-          <section class="login-page">
-              <h2>Zmień dane</h2>
-          <form method="POST">
-              {% csrf_token %}
+    <section class="login-page">
+        <h2>Zmień dane</h2>
+        <form method="POST">
+            {% csrf_token %}
             <div class="form-group">
                 {{ form.first_name }}
             </div>
-             <div class="form-group">
-                 {{ form.last_name }}
+            <div class="form-group">
+                {{ form.last_name }}
             </div>
             <div class="form-group">
                 {{ form.email }}
@@ -26,10 +26,10 @@
                 {{ form.password_check }}
             </div>
             <div class="form-group form-group--buttons">
-              <button class="btn btn--without-border" type="submit">Zapisz</button>
-              <a href="{% url 'password' %}" class="btn btn--without-border">Zmień hasło</a>
-              <a href="{% url 'index' %}" class="btn btn--without-border">Anuluj</a>
+                <button class="btn btn--without-border" type="submit">Zapisz</button>
+                <a href="{% url 'password' %}" class="btn btn--without-border">Zmień hasło</a>
+                <a href="{% url 'index' %}" class="btn btn--without-border">Anuluj</a>
             </div>
-          </form>
-        </section>
+        </form>
+    </section>
 {% endblock header-text %}

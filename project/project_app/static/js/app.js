@@ -362,48 +362,48 @@ document.addEventListener("DOMContentLoaded", function() {
         const myNextButton = myStep.lastElementChild.lastElementChild;
         myNextButton.style.display = 'None';
         const myCategoriesList = [];
-        const myInstitutionsActive = [];
+        let counter = 0;
         const myCategories = document.querySelectorAll('input[name=categories]');
         myCategories.forEach(function (element){
           if (element.checked){
             myCategoriesList.push(element.value);
           }
         });
-        const myInstitutions = document.querySelectorAll('input[name=organization]');
-        myInstitutions.forEach(function (institution){
-          institution.parentElement.parentElement.style.display = 'block';
-          const myInstitutionsCategories = institution.dataset.categories;
-          const myInstitutionsCategoriesList = myInstitutionsCategories.split(',');
-          let i = 0;
-          myCategoriesList.forEach(function (category){
-            myInstitutionsCategoriesList.forEach(function (category2){
-              if (category === category2){
-                i += 1;
-              }
-            })
-          })
-          if (i === myCategoriesList.length){
-            myInstitutionsActive.push(institution);
-            institution.parentElement.parentElement.style.display = 'block';
-            if (institution.checked){
-              myNextButton.style.display = 'block';
-            }
-          } else {
-            institution.parentElement.parentElement.style.display = 'None';
-          }
-        });
-        if (myInstitutionsActive.length === 0){
-          myStep.children[1].style.display = 'block';
-        } else {
-          myStep.children[1].style.display = 'None';
+        const myInstitution = myStep.children[2].firstElementChild.cloneNode(true);
+        while (myStep.children[2].childElementCount > 1){
+          myStep.children[2].removeChild(myStep.children[2].lastElementChild);
         }
-        myInstitutionsActive.forEach(function (element){
-          element.addEventListener('change', function (event){
-            if (element.checked){
-              myNextButton.style.display = 'block';
-            }
-          });
-        })
+        myInstitution.classList.remove('hidden-element');
+
+        fetch('' + `?categories=${myCategoriesList.join(',')}`, {
+                    method: 'GET',
+                })
+                .then(async (response) => {
+                    return await response.json();
+                })
+                .then(data => {
+                  data.forEach(function (element){
+                    const myActiveInstitution = myInstitution.cloneNode(true);
+                    myActiveInstitution.firstElementChild.firstElementChild.value = element.id;
+                    myActiveInstitution.firstElementChild.lastElementChild.firstElementChild.innerHTML = element.name;
+                    myActiveInstitution.firstElementChild.lastElementChild.lastElementChild.innerHTML = element.description;
+                    myActiveInstitution.firstElementChild.firstElementChild.addEventListener('change', function (){
+                      if (this.checked){
+                        myNextButton.style.display = 'block';
+                      }
+                    })
+                    myStep.children[2].appendChild(myActiveInstitution);
+                    counter = counter + 1;
+                  })
+                  if (counter === 0){
+                    myStep.children[0].style.display = 'None';
+                    myStep.children[1].style.display = 'block';
+                  } else {
+                    myStep.children[0].style.display = 'block';
+                    myStep.children[1].style.display = 'None';
+                  }
+                })
+                .catch(e => console.error('Błąd' + e));
       }
 
       if (this.currentStep == 4){
@@ -587,8 +587,12 @@ document.addEventListener("DOMContentLoaded", function() {
             return await response.text();
           })
           .then(data => {
+            console.log(data);
             if (data === 'True'){
-              window.location = '/thanks_donation';
+              window.location = '/confirmation?message=1';
+            }
+            else {
+              window.location = '/confirmation?message=0';
             }
           })
           .catch(e => console.error('Błąd' + e));

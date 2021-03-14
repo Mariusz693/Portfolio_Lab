@@ -1,16 +1,20 @@
+import datetime
+import json
+
 from django.shortcuts import render, redirect
 from django.views.generic.edit import View, FormView
 from django.http import JsonResponse, HttpResponse
 from django.core.paginator import Paginator
-from django.contrib.auth import authenticate, login, logout
+from django.core.mail import send_mail
+from django.contrib.auth import login, logout
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
-import datetime
-import json
+from django.forms import modelformset_factory
+from django.urls import reverse_lazy
 
-from .models import Donation, Institution, User, Category
-from .forms import UserRegisterForm, UserLoginForm, DonationForm, UserUpdateForm, UserPasswordForm
+from .models import Donation, Institution, Category, STATUS_CHOICE, User
+from .forms import UserRegisterForm, UserLoginForm, DonationForm, UserUpdateForm, UserPasswordForm, ContactForm
 
 # Create your views here.
 
@@ -29,32 +33,33 @@ class LandingPageView(View):
             if institution.donation_set.first() is not None:
                 institution_counter += 1
 
-        foundations = Institution.objects.filter(type=1).order_by('name')
-        organizations = Institution.objects.filter(type=2).order_by('name')
-        local_collections = Institution.objects.filter(type=3).order_by('name')
+        foundations = Institution.objects.filter(type=0).order_by('name')
+        organizations = Institution.objects.filter(type=1).order_by('name')
+        local_collections = Institution.objects.filter(type=2).order_by('name')
         paginator_foundations = Paginator(foundations, 5)
         paginator_foundations_counter = [i + 1 for i in range(paginator_foundations.num_pages)]
         paginator_organizations = Paginator(organizations, 5)
         paginator_organizations_counter = [i + 1 for i in range(paginator_organizations.num_pages)]
         paginator_local_collections = Paginator(local_collections, 5)
         paginator_local_collections_counter = [i + 1 for i in range(paginator_local_collections.num_pages)]
+
         page = request.GET.get('page')
         institution = request.GET.get('institution')
         if institution and page:
             data = []
-            if institution == '1':
+            if institution == '0':
                 foundations = paginator_foundations.get_page(page)
                 for foundation in foundations:
                     data.append({
-                        'name': f'Fundacja "{foundation.name}"',
+                        'name': f'{STATUS_CHOICE[foundation.type][1]}: "{foundation.name}"',
                         'description': f'Cel i misja: {foundation.description}',
                         'categories': ', '.join([category.name for category in foundation.categories.all()])
                     })
-            elif institution == '2':
+            elif institution == '1':
                 organizations = paginator_organizations.get_page(page)
                 for organization in organizations:
                     data.append({
-                        'name': f'Organizacja "{organization.name}"',
+                        'name': f'{STATUS_CHOICE[organization.type][1]}: "{organization.name}"',
                         'description': f'Cel i misja: {organization.description}',
                         'categories': ', '.join([category.name for category in organization.categories.all()])
                     })
@@ -62,7 +67,7 @@ class LandingPageView(View):
                 local_collections = paginator_local_collections.get_page(page)
                 for collection in local_collections:
                     data.append({
-                        'name': f'Zbiórka "{collection.name}"',
+                        'name': f'{STATUS_CHOICE[collection.type][1]}: "{collection.name}"',
                         'description': f'Cel i misja: {collection.description}',
                         'categories': ', '.join([category.name for category in collection.categories.all()])
                     })
@@ -91,18 +96,28 @@ class AddDonationView(LoginRequiredMixin, View):
     def get(self, request):
 
         categories = Category.objects.all()
-        institutions = Institution.objects.all()
-        for institution in institutions:
-            list_category = []
-            for category in institution.categories.all():
-                list_category.append(str(category.id))
-            institution.category_list = ','.join(list_category)
+        categories_check = request.GET.get('categories')
+        if categories_check:
+            institutions = Institution.objects.all().order_by('type')
+            categories_check = categories_check.split(',')
+            for category in categories_check:
+                institutions = institutions.filter(categories=category)
+            data = []
+            for institution in institutions:
+                data.append({
+                    'name': f'{STATUS_CHOICE[institution.type][1]} "{institution.name}"',
+                    'description': f'Cel i misja: {institution.description}',
+                    'id': f'{institution.id}'
+                })
+
+            return JsonResponse(data, safe=False)
+
         tomorrow = datetime.date.today() + datetime.timedelta(days=1)
 
         return render(
             request,
             'form.html',
-            context={'categories': categories, 'institutions': institutions, 'tomorrow': tomorrow}
+            context={'categories': categories, 'tomorrow': tomorrow}
         )
 
     def post(self, request):
@@ -131,7 +146,7 @@ class UserLoginView(FormView):
 
             return str(self.request.GET.get('next'))
 
-        return '/'
+        return reverse_lazy('index')
 
     def form_valid(self, form):
 
@@ -150,7 +165,7 @@ class UserRegisterView(FormView):
 
     form_class = UserRegisterForm
     template_name = 'register.html'
-    success_url = '/login/'
+    success_url = reverse_lazy('login')
 
     def form_valid(self, form):
 
@@ -159,7 +174,7 @@ class UserRegisterView(FormView):
         return super().form_valid(form)
 
 
-class UserUpdateView(View):
+class UserUpdateView(LoginRequiredMixin, View):
 
     def get(self, request):
 
@@ -195,7 +210,7 @@ class UserUpdateView(View):
         )
 
 
-class UserPasswordView(View):
+class UserPasswordView(LoginRequiredMixin, View):
 
     def get(self, request):
 
@@ -238,25 +253,60 @@ class UserLogoutView(View):
         return redirect('index')
 
 
-class ThanksDonationView(View):
+class ConfirmationView(View):
 
     def get(self, request):
+
+        message = request.GET.get('message')
 
         return render(
             request,
             'form-confirmation.html',
+            context={'message': message}
         )
 
 
-class UserProfileView(View):
+class UserProfileView(LoginRequiredMixin, View):
 
     def get(self, request):
 
         user = request.user
         donations = Donation.objects.filter(user=user).order_by('is_taken')
+        DonationFormSet = modelformset_factory(Donation, fields=('is_taken',), extra=0)
+        formset = DonationFormSet(queryset=donations.filter(is_taken=False))
 
         return render(
             request,
             'profile.html',
-            context={'user': user, 'donations': donations}
+            context={'user': user, 'donations': donations, 'formset': formset}
         )
+
+    def post(self, request):
+
+        DonationFormSet = modelformset_factory(Donation, fields=('is_taken',), extra=0)
+        formset = DonationFormSet(request.POST)
+        formset.save()
+
+        return redirect('profile')
+
+
+class ContactView(View):
+
+    def post(self, request):
+
+        form = ContactForm(request.POST)
+
+        if form.is_valid():
+
+            users = User.objects.filter(is_superuser=True).values_list('email')
+            users_to_send = [user[0] for user in users]
+            send_mail(
+                subject=f"{form.cleaned_data['first_name']} {form.cleaned_data['last_name']}",
+                message=form.cleaned_data['message'],
+                from_email=form.cleaned_data['email'],
+                recipient_list=users_to_send,
+            )
+
+            return redirect('/confirmation?message=2')
+
+        return redirect('/confirmation?message=3')

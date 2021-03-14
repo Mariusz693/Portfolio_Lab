@@ -8,15 +8,15 @@
 {% endblock header-img %}
 {% block header-text %}
     </header>
-          <section class="login-page">
-              <h2>Załóż konto</h2>
-          <form method="POST">
-              {% csrf_token %}
+    <section class="login-page">
+        <h2>Załóż konto</h2>
+        <form method="POST">
+            {% csrf_token %}
             <div class="form-group">
                 {{ form.first_name }}
             </div>
-             <div class="form-group">
-                 {{ form.last_name }}
+            <div class="form-group">
+                {{ form.last_name }}
             </div>
             <div class="form-group">
                 {{ form.email.errors }}
@@ -30,9 +30,10 @@
                 {{ form.password_repeat }}
             </div>
             <div class="form-group form-group--buttons">
-              <button class="btn btn--without-border" type="submit">Załóż konto</button>
-              <a href="{% url 'login' %}" class="btn btn--without-border">Zaloguj się</a>
+                <button class="btn btn--without-border" type="submit">Załóż konto</button>
+                <a href="{% url 'login' %}" class="btn btn--without-border">Zaloguj się</a>
+                <a href="{% url 'index' %}" class="btn btn--without-border">Anuluj</a>
             </div>
-          </form>
-        </section>
+        </form>
+    </section>
 {% endblock header-text %}

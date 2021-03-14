@@ -7,13 +7,32 @@
     <header class="header--form-page">
 {% endblock header-img %}
 {% block header-text %}
-      <div class="slogan container container--90">
-        <div class="slogan--item">
-          <h1><b>
-              Dziękujemy za przesłanie formularza !!!<br/>
-              Na maila prześlemy wszelkie informacje o odbiorze.
-          </b></h1>
+        <div class="slogan container container--90">
+            <div class="slogan--item">
+                <h1>
+                    {% if message == '0' %}
+                    <b>
+                        Ups coś poszło źle !!!<br/>
+                        Spróbuj ponownie, wypełnij wszystkie pola formularza.
+                    </b>
+                    {% elif message == '1' %}
+                    <b>
+                        Dziękujemy za przesłanie formularza !!!<br/>
+                        Na maila prześlemy wszelkie informacje o odbiorze.
+                    </b>
+                    {% elif message == '2' %}
+                    <b>
+                        Dziękujemy za przesłanie formularza kontaktowego !!!<br/>
+                        Na maila prześlemy odpowiedź w twojej sprawie.
+                    </b>
+                    {% elif message == '3' %}
+                    <b>
+                        Wypełnij porawnie formularz kontaktowy !!!<br/>
+                        Spróbuj ponownie, wpisz poprawnie adres email.
+                    </b>
+                    {% endif %}
+                </h1>
+            </div>
         </div>
-      </div>
     </header>
 {% endblock header-text %}

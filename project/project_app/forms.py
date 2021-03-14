@@ -1,6 +1,6 @@
 from django import forms
-from django.core.exceptions import ValidationError
 from django.contrib.auth import authenticate
+from django.core.validators import EmailValidator
 
 from .models import User, Donation
 
@@ -9,7 +9,7 @@ class UserRegisterForm(forms.ModelForm):
 
     first_name = forms.CharField(widget=forms.TextInput(attrs={'placeholder': 'Imię'}))
     last_name = forms.CharField(widget=forms.TextInput(attrs={'placeholder': 'Nazwisko'}))
-    email = forms.CharField(widget=forms.TextInput(attrs={'placeholder': 'Email'}))
+    email = forms.CharField(widget=forms.EmailInput(attrs={'placeholder': 'Email'}))
     password = forms.CharField(widget=forms.PasswordInput(attrs={'placeholder': 'Hasło'}))
     password_repeat = forms.CharField(widget=forms.PasswordInput(attrs={'placeholder': 'Powtórz hasło'}))
 
@@ -98,4 +98,24 @@ class DonationForm(forms.ModelForm):
 
     class Meta:
         model = Donation
-        fields = '__all__'
+        fields = [
+            'quantity',
+            'categories',
+            'institution',
+            'address',
+            'phone_number',
+            'city',
+            'zip_code',
+            'pick_up_date',
+            'pick_up_time',
+            'pick_up_comment',
+            'user',
+        ]
+
+
+class ContactForm(forms.Form):
+
+    first_name = forms.CharField()
+    last_name = forms.CharField()
+    message = forms.CharField(widget=forms.Textarea())
+    email = forms.CharField(widget=forms.EmailInput(), validators=[EmailValidator()])
