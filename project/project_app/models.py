@@ -7,7 +7,6 @@ from .managers import CustomUserManager
 
 # Create your models here.
 
-
 STATUS_CHOICE = (
         (0, 'Fundacja'),
         (1, 'Organizacja pozarządowa'),
@@ -34,6 +33,7 @@ class User(AbstractUser):
 
 
 class Category(models.Model):
+
     name = models.CharField(max_length=128, verbose_name='Nazwa')
 
     def __str__(self):
@@ -49,7 +49,7 @@ class Institution(models.Model):
     name = models.CharField(max_length=256, verbose_name='Nazwa')
     description = models.TextField(null=True, verbose_name='Opis')
     type = models.SmallIntegerField(choices=STATUS_CHOICE, default=0, verbose_name='Rodzaj')
-    categories = models.ManyToManyField(Category, verbose_name='Kategorie darowizny')
+    categories = models.ManyToManyField(Category, verbose_name='Kategorie darowizn')
 
     def __str__(self):
         return self.name
@@ -60,8 +60,9 @@ class Institution(models.Model):
 
 
 class Donation(models.Model):
+
     quantity = models.SmallIntegerField(verbose_name='Ilość worków')
-    categories = models.ManyToManyField(Category, verbose_name='Kategorie darowizny')
+    categories = models.ManyToManyField(Category, verbose_name='Kategorie darowizn')
     institution = models.ForeignKey(Institution, on_delete=models.CASCADE, verbose_name='Instytucja')
     address = models.CharField(max_length=128, verbose_name='Adres')
     phone_number = models.CharField(max_length=9, verbose_name='Numer telefonu')
