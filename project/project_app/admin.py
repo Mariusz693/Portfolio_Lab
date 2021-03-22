@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
+from django.contrib import messages
 from django.utils.translation import ugettext_lazy as _
 from .models import User, Category, Institution, Donation
 
@@ -24,6 +25,30 @@ class UserAdmin(DjangoUserAdmin):
     list_display = ('email', 'first_name', 'last_name', 'is_staff')
     search_fields = ('email', 'first_name', 'last_name')
     ordering = ('email',)
+
+    def delete_model(self, request, obj):
+
+        superusers_count = User.objects.filter(is_superuser=True).count()
+        user_status = 1 if obj.is_superuser else 0
+
+        if superusers_count - user_status == 0:
+            messages.set_level(request, messages.ERROR)
+            messages.error(request, 'Nie można usunąć ostatniego administratora !!!')
+
+        else:
+            obj.delete()
+
+    def delete_queryset(self, request, queryset):
+
+        superusers_count = User.objects.filter(is_superuser=True).count()
+        superusers_in_queryset = queryset.filter(is_superuser=True).count()
+
+        if superusers_count - superusers_in_queryset == 0:
+            messages.set_level(request, messages.ERROR)
+            messages.error(request, 'Próbujesz usunąć wszystkich administratorów !!!')
+
+        else:
+            queryset.delete()
 
 
 admin.site.register(Category)

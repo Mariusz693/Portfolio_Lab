@@ -1,3 +1,5 @@
+import uuid
+
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.utils.translation import ugettext_lazy as _
@@ -80,3 +82,9 @@ class Donation(models.Model):
     class Meta:
         verbose_name = 'Darowizna'
         verbose_name_plural = 'Darowizny'
+
+
+class UserUniqueToken(models.Model):
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    token = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)

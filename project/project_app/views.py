@@ -1,6 +1,7 @@
 import datetime
 import json
 
+from django.contrib.auth import authenticate
 from django.shortcuts import render, redirect
 from django.views.generic.edit import View, FormView
 from django.http import JsonResponse, HttpResponse
@@ -11,9 +12,9 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.forms import modelformset_factory
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse
 
-from .models import Donation, Institution, Category, STATUS_CHOICE, User
+from .models import Donation, Institution, Category, STATUS_CHOICE, User, UserUniqueToken
 from .forms import UserRegisterForm, UserLoginForm, DonationForm, UserUpdateForm, UserPasswordForm, ContactForm
 
 # Create your views here.
@@ -130,9 +131,9 @@ class AddDonationView(LoginRequiredMixin, View):
 
             form.save()
 
-            return HttpResponse(True)
+            return HttpResponse(f'{reverse("confirmation")}?message=1')
 
-        return HttpResponse(False)
+        return HttpResponse(f'{reverse("confirmation")}?message=0')
 
 
 class UserLoginView(FormView):
@@ -148,12 +149,21 @@ class UserLoginView(FormView):
 
         return reverse_lazy('index')
 
+    def get_initial(self):
+
+        initial = super().get_initial()
+        initial['token'] = self.request.GET.get('token')
+
+        return initial
+
     def form_valid(self, form):
 
         user = form.authenticate_user()
 
         if user:
+
             login(self.request, user)
+
         else:
 
             return redirect('register')
@@ -165,11 +175,23 @@ class UserRegisterView(FormView):
 
     form_class = UserRegisterForm
     template_name = 'register.html'
-    success_url = reverse_lazy('login')
+
+    def get_success_url(self):
+
+        return f'{reverse("confirmation")}?message=4'
 
     def form_valid(self, form):
 
-        form.save()
+        user = form.save()
+        new_token = UserUniqueToken.objects.create(user=user)
+
+        send_mail(
+            subject='Rejestracja konta',
+            message=f'''Dziękujemy za rejestrację konta w naszym serwisie, twój link do aktywacji konta:
+                {self.request.get_host()}{reverse("login")}?token={new_token.token}''',
+            from_email='webmaster@localhost',
+            recipient_list=[form.cleaned_data['email']],
+        )
 
         return super().form_valid(form)
 
@@ -307,6 +329,6 @@ class ContactView(View):
                 recipient_list=users_to_send,
             )
 
-            return redirect('/confirmation?message=2')
+            return redirect(f'{reverse("confirmation")}?message=2')
 
-        return redirect('/confirmation?message=3')
+        return redirect(f'{reverse("confirmation")}?message=3')

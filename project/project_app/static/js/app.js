@@ -588,12 +588,7 @@ document.addEventListener("DOMContentLoaded", function() {
           })
           .then(data => {
             console.log(data);
-            if (data === 'True'){
-              window.location = '/confirmation?message=1';
-            }
-            else {
-              window.location = '/confirmation?message=0';
-            }
+            window.location = data;
           })
           .catch(e => console.error('Błąd' + e));
     }

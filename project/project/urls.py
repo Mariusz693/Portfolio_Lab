@@ -23,6 +23,7 @@ urlpatterns = [
     path('add_donation/', views.AddDonationView.as_view(), name='add-donation'),
     path('confirmation/', views.ConfirmationView.as_view(), name='confirmation'),
     path('login/', views.UserLoginView.as_view(), name='login'),
+    # path('first_login/', views.UserLoginView.as_view(), name='first-login'),
     path('logout/', views.UserLogoutView.as_view(), name='logout'),
     path('register/', views.UserRegisterView.as_view(), name='register'),
     path('update/', views.UserUpdateView.as_view(), name='update'),
