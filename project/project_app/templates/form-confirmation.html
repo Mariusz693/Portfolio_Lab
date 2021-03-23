@@ -35,6 +35,15 @@
                         Dziękujemy za rejestracje w naszym serwisie !!!<br/>
                         Na maila prześlemy link aktywacyjny.
                     </b>
+                    {% elif message == '5' %}
+                    <b>
+                        Twój link jest błędny lub źle podany !!!<br/>
+                        Spróbuj ponownie lub wypełnij formularz kontaktowy.
+                    </b>
+                    {% elif message == '6' %}
+                    <b>
+                        Na maila prześlemy link do zmiany hasła !!!
+                    </b>
                     {% endif %}
                 </h1>
             </div>

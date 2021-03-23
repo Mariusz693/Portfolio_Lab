@@ -1,9 +1,8 @@
 from django import forms
-from django.shortcuts import get_object_or_404
 from django.contrib.auth import authenticate
 from django.core.validators import EmailValidator
 
-from .models import User, Donation, UserUniqueToken
+from .models import User, Donation
 from .validators import validate_password
 
 
@@ -74,8 +73,11 @@ class UserPasswordForm(forms.Form):
         password_check = self.cleaned_data['password_check']
         email = self.cleaned_data['email']
 
+        if validate_password(password_new):
+            self.add_error('password_new', validate_password(password_new))
+
         if password_new != password_repeat:
-            self.add_error('password_new', 'Nowe hasła róźnią się od siebie')
+            self.add_error('password_repeat', 'Nowe hasła róźnią się od siebie')
 
         if not authenticate(email=email, password=password_check):
             self.add_error('password_check', 'Błędne hasło')
@@ -112,29 +114,14 @@ class UserLoginForm(forms.Form):
 
     email = forms.CharField(widget=forms.TextInput(attrs={'placeholder': 'Email'}))
     password = forms.CharField(widget=forms.PasswordInput(attrs={'placeholder': 'Hasło'}))
-    token = forms.CharField(widget=forms.HiddenInput(), required=False)
 
     def clean(self):
 
-        super(UserLoginForm, self).clean()
+        super().clean()
         password = self.cleaned_data['password']
         email = self.cleaned_data['email']
-        token = self.cleaned_data['token']
+
         user = User.objects.filter(email=email).first()
-
-        if token:
-
-            user_unique_token = UserUniqueToken.objects.get(token=token)
-
-            if user == user_unique_token.user:
-
-                user.is_active = True
-                user.save()
-                user_unique_token.delete()
-
-            else:
-
-                self.add_error('email', 'Błędny email, wpisz adres na który dostałeś link aktywacyjny')
 
         if user:
 
@@ -153,3 +140,41 @@ class UserLoginForm(forms.Form):
         user = authenticate(email=email, password=password)
 
         return user
+
+
+class ResetPasswordForm(forms.Form):
+
+    email = forms.CharField(widget=forms.EmailInput(attrs={'placeholder': 'Podaj adres email'}))
+
+    def clean(self):
+
+        super().clean()
+        email = self.cleaned_data['email']
+
+        if not User.objects.filter(email=email).first():
+            self.add_error('email', 'Brak konta o podanym adresie email')
+
+
+class SetPasswordForm(forms.Form):
+
+    password_new = forms.CharField(widget=forms.PasswordInput(attrs={'placeholder': 'Nowe hasło'}))
+    password_repeat = forms.CharField(widget=forms.PasswordInput(attrs={'placeholder': 'Powtórz hasło'}))
+
+    def clean(self):
+
+        super().clean()
+        password_new = self.cleaned_data['password_new']
+        password_repeat = self.cleaned_data['password_repeat']
+
+        if validate_password(password_new):
+            self.add_error('password_new', validate_password(password_new))
+
+        if password_new != password_repeat:
+            self.add_error('password_repeat', 'Nowe hasła róźnią się od siebie')
+
+    def save(self, user):
+
+        password_new = self.cleaned_data['password_new']
+
+        user.set_password(password_new)
+        user.save()

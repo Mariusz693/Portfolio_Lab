@@ -1,8 +1,7 @@
 import datetime
 import json
 
-from django.contrib.auth import authenticate
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic.edit import View, FormView
 from django.http import JsonResponse, HttpResponse
 from django.core.paginator import Paginator
@@ -15,7 +14,7 @@ from django.forms import modelformset_factory
 from django.urls import reverse_lazy, reverse
 
 from .models import Donation, Institution, Category, STATUS_CHOICE, User, UserUniqueToken
-from .forms import UserRegisterForm, UserLoginForm, DonationForm, UserUpdateForm, UserPasswordForm, ContactForm
+from .forms import UserRegisterForm, UserLoginForm, DonationForm, UserUpdateForm, UserPasswordForm, ContactForm, ResetPasswordForm, SetPasswordForm
 
 # Create your views here.
 
@@ -149,13 +148,6 @@ class UserLoginView(FormView):
 
         return reverse_lazy('index')
 
-    def get_initial(self):
-
-        initial = super().get_initial()
-        initial['token'] = self.request.GET.get('token')
-
-        return initial
-
     def form_valid(self, form):
 
         user = form.authenticate_user()
@@ -188,7 +180,7 @@ class UserRegisterView(FormView):
         send_mail(
             subject='Rejestracja konta',
             message=f'''Dziękujemy za rejestrację konta w naszym serwisie, twój link do aktywacji konta:
-                {self.request.get_host()}{reverse("login")}?token={new_token.token}''',
+                {self.request.get_host()}{reverse("active-account")}?token={new_token.token}''',
             from_email='webmaster@localhost',
             recipient_list=[form.cleaned_data['email']],
         )
@@ -332,3 +324,89 @@ class ContactView(View):
             return redirect(f'{reverse("confirmation")}?message=2')
 
         return redirect(f'{reverse("confirmation")}?message=3')
+
+
+class ActiveAccountView(View):
+
+    def get(self, request):
+
+        token = request.GET.get('token')
+        user_unique_token = UserUniqueToken.objects.filter(token=token).first()
+
+        if user_unique_token:
+
+            user = user_unique_token.user
+            user.is_active = True
+            user.save()
+
+            return redirect('login')
+
+        else:
+
+            return redirect(f'{reverse("confirmation")}?message=5')
+
+
+class ResetPasswordView(FormView):
+
+    form_class = ResetPasswordForm
+    template_name = 'reset-password.html'
+
+    def get_success_url(self):
+
+        return f'{reverse("confirmation")}?message=6'
+
+    def form_valid(self, form):
+
+        user = User.objects.get(email=form.cleaned_data['email'])
+        new_token = UserUniqueToken.objects.create(user=user)
+
+        send_mail(
+            subject='Resetowanie hasła',
+            message=f'''Twój link do ustawienia nowego hasła:
+                {self.request.get_host()}{reverse("set-password")}?token={new_token.token}''',
+            from_email='webmaster@localhost',
+            recipient_list=[form.cleaned_data['email']],
+        )
+
+        return super().form_valid(form)
+
+
+class SetPasswordView(View):
+
+    def get(self, request):
+
+        token = request.GET.get('token')
+        user_unique_token = UserUniqueToken.objects.filter(token=token).first()
+
+        if user_unique_token:
+
+            form = SetPasswordForm()
+
+            return render(
+                request,
+                'set-password.html',
+                context={'form': form}
+            )
+
+        else:
+
+            return redirect(f'{reverse("confirmation")}?message=5')
+
+    def post(self, request):
+
+        token = request.GET.get('token')
+        user_unique_token = UserUniqueToken.objects.filter(token=token).first()
+
+        form = SetPasswordForm(request.POST)
+
+        if form.is_valid():
+
+            form.save(user_unique_token.user)
+
+            return redirect('login')
+
+        return render(
+            request,
+            'set-password.html',
+            context={'form': form}
+        )
