@@ -171,10 +171,3 @@ class SetPasswordForm(forms.Form):
 
         if password_new != password_repeat:
             self.add_error('password_repeat', 'Nowe hasła róźnią się od siebie')
-
-    def save(self, user):
-
-        password_new = self.cleaned_data['password_new']
-
-        user.set_password(password_new)
-        user.save()

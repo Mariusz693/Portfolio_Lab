@@ -401,7 +401,11 @@ class SetPasswordView(View):
 
         if form.is_valid():
 
-            form.save(user_unique_token.user)
+            password_new = form.cleaned_data['password_new']
+            user = user_unique_token.user
+            user.set_password(password_new)
+            user.save()
+            user_unique_token.delete()
 
             return redirect('login')
 
