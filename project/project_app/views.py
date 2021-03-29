@@ -1,7 +1,7 @@
 import datetime
 import json
 
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, redirect
 from django.views.generic.edit import View, FormView
 from django.http import JsonResponse, HttpResponse
 from django.core.paginator import Paginator
@@ -14,7 +14,9 @@ from django.forms import modelformset_factory
 from django.urls import reverse_lazy, reverse
 
 from .models import Donation, Institution, Category, STATUS_CHOICE, User, UserUniqueToken
-from .forms import UserRegisterForm, UserLoginForm, DonationForm, UserUpdateForm, UserPasswordForm, ContactForm, ResetPasswordForm, SetPasswordForm
+from .forms import UserRegisterForm, UserLoginForm, DonationForm, UserUpdateForm, UserPasswordForm, \
+    ContactForm, ResetPasswordForm, SetPasswordForm
+from .utils import create_list
 
 # Create your views here.
 
@@ -33,44 +35,21 @@ class LandingPageView(View):
             if institution.donation_set.first() is not None:
                 institution_counter += 1
 
-        foundations = Institution.objects.filter(type=0).order_by('name')
-        organizations = Institution.objects.filter(type=1).order_by('name')
-        local_collections = Institution.objects.filter(type=2).order_by('name')
-        paginator_foundations = Paginator(foundations, 5)
-        paginator_foundations_counter = [i + 1 for i in range(paginator_foundations.num_pages)]
-        paginator_organizations = Paginator(organizations, 5)
-        paginator_organizations_counter = [i + 1 for i in range(paginator_organizations.num_pages)]
-        paginator_local_collections = Paginator(local_collections, 5)
-        paginator_local_collections_counter = [i + 1 for i in range(paginator_local_collections.num_pages)]
+        paginator_foundations = Paginator(Institution.objects.filter(type=0).order_by('name'), 5)
+        paginator_organizations = Paginator(Institution.objects.filter(type=1).order_by('name'), 5)
+        paginator_local_collections = Paginator(Institution.objects.filter(type=2).order_by('name'), 5)
 
         page = request.GET.get('page')
         institution = request.GET.get('institution')
+
         if institution and page:
-            data = []
+
             if institution == '0':
-                foundations = paginator_foundations.get_page(page)
-                for foundation in foundations:
-                    data.append({
-                        'name': f'{STATUS_CHOICE[foundation.type][1]}: "{foundation.name}"',
-                        'description': f'Cel i misja: {foundation.description}',
-                        'categories': ', '.join([category.name for category in foundation.categories.all()])
-                    })
+                data = create_list(paginator_foundations.get_page(page))
             elif institution == '1':
-                organizations = paginator_organizations.get_page(page)
-                for organization in organizations:
-                    data.append({
-                        'name': f'{STATUS_CHOICE[organization.type][1]}: "{organization.name}"',
-                        'description': f'Cel i misja: {organization.description}',
-                        'categories': ', '.join([category.name for category in organization.categories.all()])
-                    })
+                data = create_list(paginator_organizations.get_page(page))
             else:
-                local_collections = paginator_local_collections.get_page(page)
-                for collection in local_collections:
-                    data.append({
-                        'name': f'{STATUS_CHOICE[collection.type][1]}: "{collection.name}"',
-                        'description': f'Cel i misja: {collection.description}',
-                        'categories': ', '.join([category.name for category in collection.categories.all()])
-                    })
+                data = create_list(paginator_local_collections.get_page(page))
 
             return JsonResponse(data, safe=False)
 
@@ -81,11 +60,8 @@ class LandingPageView(View):
                 'donation_counter': donation_counter,
                 'institution_counter': institution_counter,
                 'foundations': paginator_foundations.get_page(page),
-                'paginator_foundations_counter': paginator_foundations_counter,
                 'organizations': paginator_organizations.get_page(page),
-                'paginator_organizations_counter': paginator_organizations_counter,
                 'local_collections': paginator_local_collections.get_page(page),
-                'paginator_local_collections_counter': paginator_local_collections_counter,
             }
         )
 
@@ -129,6 +105,27 @@ class AddDonationView(LoginRequiredMixin, View):
         if form.is_valid():
 
             form.save()
+
+            comment = form.cleaned_data["pick_up_comment"]
+            categories = [category.name for category in form.cleaned_data["categories"]]
+            send_mail(
+                subject='Przekazanie darow',
+                message=f'''
+                Dziękujemy za przekazanie darów:
+                    Ilość worków: {form.cleaned_data["quantity"]}
+                    Kategorie: {", ".join(categories)}
+                    Instytucja: {form.cleaned_data["institution"]}
+                    Miasto: {form.cleaned_data["city"]}
+                    Adres: {form.cleaned_data["address"]}
+                    Kod pocztowy: {form.cleaned_data["zip_code"]}
+                    Numer telefonu: {form.cleaned_data["phone_number"]}
+                    Data odbioru: {form.cleaned_data["pick_up_date"]}
+                    Godzina odbioru: {form.cleaned_data["pick_up_time"]}
+                    Informacja dla kuriera: {comment if comment else 'Brak uwag'}
+                ''',
+                from_email='webmaster@localhost',
+                recipient_list=[request.user.email],
+            )
 
             return HttpResponse(f'{reverse("confirmation")}?message=1')
 
@@ -286,7 +283,7 @@ class UserProfileView(LoginRequiredMixin, View):
 
         user = request.user
         donations = Donation.objects.filter(user=user).order_by('is_taken')
-        DonationFormSet = modelformset_factory(Donation, fields=('is_taken',), extra=0)
+        DonationFormSet = modelformset_factory(Donation, fields=('is_taken', 'quantity', 'institution', 'categories', 'pick_up_date'), extra=0)
         formset = DonationFormSet(queryset=donations.filter(is_taken=False))
 
         return render(
