@@ -283,7 +283,7 @@ class UserProfileView(LoginRequiredMixin, View):
 
         user = request.user
         donations = Donation.objects.filter(user=user).order_by('is_taken')
-        DonationFormSet = modelformset_factory(Donation, fields=('is_taken', 'quantity', 'institution', 'categories', 'pick_up_date'), extra=0)
+        DonationFormSet = modelformset_factory(Donation, fields=('is_taken',), extra=0)
         formset = DonationFormSet(queryset=donations.filter(is_taken=False))
 
         return render(
