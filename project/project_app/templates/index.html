@@ -111,9 +111,8 @@
                 </li>
               {% endfor %}
             </ul>
-            {% if paginator_foundations_counter|length > 1 %}
             <ul class="help--slides-pagination">
-                {% for item in paginator_foundations_counter %}
+                {% for item in foundations.paginator.page_range %}
                 <li>
                     <a href="#" class="btn btn--small btn--without-border {% if item < 2 %}active{% endif %}"
                        data-institution="0" data-page="{{ item }}">
@@ -122,7 +121,6 @@
                 </li>
                 {% endfor %}
             </ul>
-            {% endif %}
         </div>
         <!-- SLIDE 2 -->
         <div class="help--slides" data-id="2">
@@ -143,18 +141,16 @@
                 </li>
                 {% endfor %}
             </ul>
-            {% if paginator_organizations_counter|length > 1 %}
             <ul class="help--slides-pagination">
-                {% for item in paginator_organizations_counter %}
+                {% for item in organizations.paginator.page_range %}
                 <li>
                     <a href="#" class="btn btn--small btn--without-border {% if item < 2 %}active{% endif %}"
                        data-institution="1" data-page="{{ item }}">
                         {{ item }}
                     </a>
                 </li>
-            {% endfor %}
-        </ul>
-        {% endif %}
+                {% endfor %}
+            </ul>
         </div>
         <!-- SLIDE 3 -->
         <div class="help--slides" data-id="3">
@@ -175,9 +171,8 @@
                 </li>
             {% endfor %}
             </ul>
-            {% if paginator_local_collections_counter|length > 1 %}
             <ul class="help--slides-pagination">
-                {% for item in paginator_local_collections_counter %}
+                {% for item in local_collections.paginator.page_range %}
                 <li>
                     <a href="#" class="btn btn--small btn--without-border {% if item < 2 %}active{% endif %}"
                        data-institution="2" data-page="{{ item }}">
@@ -186,7 +181,6 @@
                 </li>
                 {% endfor %}
             </ul>
-            {% endif %}
         </div>
     </section>
 {% endblock content %}
