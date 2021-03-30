@@ -3,7 +3,7 @@
 Django Web application where user can pass things on to trusted institutions.
 HomePage                                                  |  LoginPage
 :-------------------------------------------------------:|:----------------------------------------------:
-![MotoCrawlerHomePage](https://snipboard.io/hFg9kI.jpg)  |  ![MotoCrawlerLoginPage](https://snipboard.io/XQDLtz.jpg)
+![MotoCrawlerHomePage](https://snipboard.io/hFg9kI.jpg)  |  ![MotoCrawlerLoginPage](https://snipboard.io/9koxyU.jpg)
 CloseUp                                                  |  Favourites
 ![MotoCrawlerCarCards](https://snipboard.io/Fn6hzH.jpg)  |  ![MotoCrawlerFavourites](https://snipboard.io/h9TVfC.jpg)
 
