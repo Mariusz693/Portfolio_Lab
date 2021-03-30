@@ -2,7 +2,7 @@
 
 Django Web application where user can pass things on to trusted institutions.
 
-                                                  |
+ Photos
 :-------------------------------------------------------:|:----------------------------------------------:
 ![PortfolioLab](https://snipboard.io/hFg9kI.jpg)  |  ![PortfolioLab](https://snipboard.io/9koxyU.jpg)
 ![PortfolioLab](https://snipboard.io/1Ek4zU.jpg)  |  ![PortfolioLab](https://snipboard.io/muHo7a.jpg)
