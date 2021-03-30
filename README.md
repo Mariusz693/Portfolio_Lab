@@ -26,4 +26,4 @@ User profile                                      |User profile
 * JS (Fetch)
 
 ### Contact
-[LinkedIn](https://www.linkedin.com/in/mariusz-kuleta/)
+* [LinkedIn](https://www.linkedin.com/in/mariusz-kuleta/)
