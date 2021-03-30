@@ -10,6 +10,19 @@ Add Donation                                      |Add Donation
 User profile                                      |User profile
 ![PortfolioLab](https://snipboard.io/A8Eiug.jpg)  |  ![PortfolioLab](https://snipboard.io/XgfBFt.jpg)
 
-Technologies:
+### Main functionalities:
+- registration
+- login
+- add donations
+- contact form (send e-mail).
+- list institution:
+    - foundations
+    - non-governmental organization
+    - local donations
+
+### Technologies:
 * Django (Python's framework)
 * JS (Fetch)
+
+### Contact
+[LinkedIn](https://www.linkedin.com/in/mariusz-kuleta/)
