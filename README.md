@@ -15,10 +15,11 @@ User profile                                      |User profile
 - login
 - add donations
 - contact form (send e-mail).
-- list institution:
+- list of intitutions broken down into:
     - foundations
     - non-governmental organization
     - local donations
+- statistics all donations
 
 ### Technologies:
 * Django (Python's framework)
