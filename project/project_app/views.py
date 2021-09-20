@@ -138,7 +138,7 @@ class UserLoginView(FormView):
     template_name = 'login.html'
 
     def get_success_url(self):
-
+    	
         if self.request.GET.get('next'):
 
             return str(self.request.GET.get('next'))
